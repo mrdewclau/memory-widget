@@ -16,7 +16,13 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/memory-widget.jpg" width="420" alt="Memory Widget showing live RAM composition, trend, context, and app footprints">
+  <a href="docs/assets/memory-widget-overview.mp4">
+    <img src="docs/assets/memory-widget-overview-poster.jpg" width="420" alt="Watch the narrated Memory Widget overview">
+  </a>
+</p>
+
+<p align="center">
+  <a href="docs/assets/memory-widget-overview.mp4">Watch the 60-second narrated overview</a>
 </p>
 
 Memory Widget turns macOS memory into a glanceable visual model: what is physically in RAM, how much remains available, which apps own the largest footprints, why their helper processes exist, and how memory changed over time. It stays above normal windows, follows you across Spaces, and can collapse into a desktop widget or menu-bar popover.
