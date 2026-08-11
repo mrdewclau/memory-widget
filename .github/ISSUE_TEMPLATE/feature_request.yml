@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a focused visual or explanatory improvement
+title: "[Idea]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What should become easier to understand at a glance?
+    validations:
+      required: true
+  - type: textarea
+    id: visual
+    attributes:
+      label: What would the ideal interaction look and feel like?
+    validations:
+      required: true
+  - type: textarea
+    id: resources
+    attributes:
+      label: Resource and privacy impact
+      description: Explain expected RAM, CPU, storage, permission, and data-retention impact.
+    validations:
+      required: true

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate scripts and metadata
+        run: |
+          zsh -n build_app.sh install_mcp.sh memory-widget-mcp test_mcp.sh scripts/package_release.sh
+          jq empty .mcp.json
+
+      - name: Reject machine-specific or secret material
+        run: |
+          if git grep -nE '/Users/|BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY|AKIA[0-9A-Z]{16}|github_pat_|gh[pousr]_[A-Za-z0-9_]{30,}' -- ':!.github/workflows/ci.yml'; then
+            exit 1
+          fi
+
+      - name: Build app
+        env:
+          MEMORY_WIDGET_SIGNING_IDENTITY: '-'
+        run: ./build_app.sh
+
+      - name: Verify signed bundle
+        run: codesign --verify --deep --strict --verbose=2 "Memory Widget.app"
+
+      - name: Test modern and legacy MCP
+        run: ./test_mcp.sh
+
+      - name: Package smoke test
+        env:
+          MEMORY_WIDGET_SIGNING_IDENTITY: '-'
+        run: ./scripts/package_release.sh
+
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: Memory-Widget-macos-arm64
+          path: dist/*
+          if-no-files-found: error

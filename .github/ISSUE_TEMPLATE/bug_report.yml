@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible Memory Widget defect
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Remove personal process, path, screen, camera, and audio information before posting.
+  - type: input
+    id: version
+    attributes:
+      label: Memory Widget version
+    validations:
+      required: true
+  - type: input
+    id: mac
+    attributes:
+      label: Mac and macOS version
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include exact steps, expected behavior, and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      render: shell

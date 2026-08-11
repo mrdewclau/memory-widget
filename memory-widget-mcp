@@ -1,0 +1,12 @@
+#!/bin/zsh
+set -euo pipefail
+
+BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
+SERVER="$BASE_DIR/Memory Widget.app/Contents/MacOS/MemoryWidgetMCP"
+
+if [[ ! -x "$SERVER" ]]; then
+  print -u2 "Memory Widget MCP is not built. Run ./build_app.sh first."
+  exit 1
+fi
+
+exec "$SERVER"

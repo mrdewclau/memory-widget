@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "memory-widget": {
+      "type": "stdio",
+      "command": "/bin/zsh",
+      "args": ["./memory-widget-mcp"]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+.DS_Store
+.build/
+dist/
+Memory Widget.app/
+*.xcarchive
+*.dSYM/
+*.zip
+*.sha256
+
+# Local runtime and audit output
+mcp-live-state.json
+memory-history.json
+Context Observatory/
+PUBLIC_GITHUB_SECURITY_AUDIT.md
