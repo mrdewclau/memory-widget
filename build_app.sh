@@ -12,53 +12,31 @@ APP_DIR="$BASE_DIR/Memory Widget.app"
 CONTENTS="$APP_DIR/Contents"
 MACOS="$CONTENTS/MacOS"
 RESOURCES="$CONTENTS/Resources"
-ICON_BUILD="$BASE_DIR/.build/MemoryWidget.iconset"
-ICON_SOURCE_PNG="$BASE_DIR/.build/MemoryWidgetIcon.svg.png"
-SWIFT_OPTIMIZATION="${MEMORY_WIDGET_SWIFT_OPTIMIZATION:--O}"
+FRAMEWORKS="$CONTENTS/Frameworks"
+mkdir -p "$BASE_DIR/.build"
+ICON_WORK="$(mktemp -d "$BASE_DIR/.build/icon-work.XXXXXX")"
+ICON_BUILD="$ICON_WORK/MemoryWidget.iconset"
+ICON_SOURCE_PNG="$ICON_WORK/MemoryWidgetIcon.svg.png"
+
+cleanup() {
+  rm -rf "$ICON_WORK"
+}
+trap cleanup EXIT
 
 rm -rf "$APP_DIR"
-rm -rf "$BASE_DIR/.build"
-mkdir -p "$MACOS" "$RESOURCES" "$ICON_BUILD"
+mkdir -p "$MACOS" "$RESOURCES" "$FRAMEWORKS" "$ICON_BUILD"
 
-swiftc "$BASE_DIR/MemoryWidget.swift" \
-  "$BASE_DIR/ContextObservatory.swift" \
-  "$BASE_DIR/MCPStateBridge.swift" \
-  -o "$MACOS/MemoryWidget" \
-  -framework AppKit \
-  -framework AVFoundation \
-  -framework CoreAudio \
-  -framework CoreGraphics \
-  -framework CoreImage \
-  -framework ImageIO \
-  -framework ScreenCaptureKit \
-  -framework SwiftUI \
-  -parse-as-library \
-  -target arm64-apple-macosx14.0 \
-  "$SWIFT_OPTIMIZATION"
+cd "$BASE_DIR"
+swift build --configuration release --arch arm64
+BUILD_PRODUCTS="$(swift build --configuration release --arch arm64 --show-bin-path)"
 
-swiftc "$BASE_DIR/ContextVisionHelper.swift" \
-  -o "$MACOS/ContextVisionHelper" \
-  -framework CoreGraphics \
-  -framework ImageIO \
-  -framework Vision \
-  -parse-as-library \
-  -target arm64-apple-macosx14.0 \
-  "$SWIFT_OPTIMIZATION"
+install -m 755 "$BUILD_PRODUCTS/MemoryWidget" "$MACOS/MemoryWidget"
+install -m 755 "$BUILD_PRODUCTS/ContextVisionHelper" "$MACOS/ContextVisionHelper"
+install -m 755 "$BUILD_PRODUCTS/ContextSoundHelper" "$MACOS/ContextSoundHelper"
+install -m 755 "$BUILD_PRODUCTS/MemoryWidgetMCP" "$MACOS/MemoryWidgetMCP"
+ditto "$BUILD_PRODUCTS/Sparkle.framework" "$FRAMEWORKS/Sparkle.framework"
 
-swiftc "$BASE_DIR/ContextSoundHelper.swift" \
-  -o "$MACOS/ContextSoundHelper" \
-  -framework SoundAnalysis \
-  -parse-as-library \
-  -target arm64-apple-macosx14.0 \
-  "$SWIFT_OPTIMIZATION"
-
-swiftc "$BASE_DIR/MemoryWidgetMCP.swift" \
-  -o "$MACOS/MemoryWidgetMCP" \
-  -parse-as-library \
-  -target arm64-apple-macosx14.0 \
-  "$SWIFT_OPTIMIZATION"
-
-qlmanage -t -s 1024 -o "$BASE_DIR/.build" "$BASE_DIR/MemoryWidgetIcon.svg" >/dev/null 2>&1
+qlmanage -t -s 1024 -o "$ICON_WORK" "$BASE_DIR/MemoryWidgetIcon.svg" >/dev/null
 for spec in \
   "16 icon_16x16.png" \
   "32 icon_16x16@2x.png" \
@@ -75,7 +53,6 @@ for spec in \
   sips -z "$size" "$size" "$ICON_SOURCE_PNG" --out "$ICON_BUILD/$name" >/dev/null
 done
 iconutil -c icns "$ICON_BUILD" -o "$RESOURCES/MemoryWidget.icns"
-rm -rf "$BASE_DIR/.build"
 
 cat > "$CONTENTS/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -95,9 +72,9 @@ cat > "$CONTENTS/Info.plist" <<'PLIST'
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.1.1</string>
+	<string>2.2.0</string>
 	<key>CFBundleVersion</key>
-	<string>13</string>
+	<string>14</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>
@@ -110,10 +87,29 @@ cat > "$CONTENTS/Info.plist" <<'PLIST'
 	<string>Memory Widget takes occasional local screen snapshots so memory changes can be connected to the work visible on this Mac.</string>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>Memory Widget analyzes local audio context to distinguish active use, playback, room activity, and quiet periods.</string>
+	<key>SUFeedURL</key>
+	<string>https://github.com/mrdewclau/memory-widget/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>a95jtwpswOF3OPTITNyTAC62wpytf4xoFf852++7Iuw=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUAllowsAutomaticUpdates</key>
+	<false/>
+	<key>SUEnableSystemProfiling</key>
+	<false/>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
+	<key>SURequireSignedFeed</key>
+	<true/>
 </dict>
 </plist>
 PLIST
 
+codesign --force --deep --sign "$SIGNING_IDENTITY" "$FRAMEWORKS/Sparkle.framework" >/dev/null
 codesign --force --sign "$SIGNING_IDENTITY" "$MACOS/ContextVisionHelper" >/dev/null
 codesign --force --sign "$SIGNING_IDENTITY" "$MACOS/ContextSoundHelper" >/dev/null
 codesign --force --sign "$SIGNING_IDENTITY" "$MACOS/MemoryWidgetMCP" >/dev/null

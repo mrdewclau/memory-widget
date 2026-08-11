@@ -1,6 +1,6 @@
 # Architecture
 
-Memory Widget is a dependency-free native Swift application compiled directly with `swiftc`.
+Memory Widget is a native Swift application built with Swift Package Manager. Its only third-party runtime dependency is the pinned Sparkle framework used for secure updates.
 
 ```text
 macOS VM statistics + process samples
@@ -26,6 +26,17 @@ MemoryMonitor + ContextObservatory
                   │
                   ▼
       MemoryWidgetMCP (stdio only)
+
+GitHub Releases (HTTPS)
+          │
+          ▼
+ signed appcast + signed ZIP
+          │
+          ▼
+ Sparkle verifies before extraction
+          │
+          ▼
+ atomic Memory Widget.app replacement
 ```
 
 ## Resource policy
@@ -44,3 +55,5 @@ MemoryMonitor + ContextObservatory
 ## Trust boundaries
 
 The app reads operating-system and current-user process metadata. Camera, microphone, and screen content cross macOS privacy boundaries only after operating-system authorization. The MCP server crosses a separate local trust boundary: configured agents can read the published summaries and ask macOS to open the app, but cannot alter processes, permissions, histories, or capture schedules through MCP.
+
+Sparkle crosses a narrow network boundary to GitHub Releases. System profiling is disabled. The updater receives no Memory Widget telemetry and can replace only the application bundle; persistent user data remains in Application Support and UserDefaults. The signed appcast and archive are separate authenticity checks, both rooted in the Ed25519 public key embedded in the app.

@@ -16,8 +16,9 @@ jobs:
 
       - name: Validate scripts and metadata
         run: |
-          zsh -n build_app.sh install_mcp.sh memory-widget-mcp test_mcp.sh scripts/package_release.sh
+          zsh -n build_app.sh install_mcp.sh memory-widget-mcp test_mcp.sh scripts/package_release.sh scripts/make_appcast.sh scripts/test_updater.sh
           jq empty .mcp.json
+          test "$(jq -r '.pins[] | select(.identity == "sparkle") | .state.version' Package.resolved)" = "2.9.5"
 
       - name: Reject machine-specific or secret material
         run: |
@@ -31,7 +32,9 @@ jobs:
         run: ./build_app.sh
 
       - name: Verify signed bundle
-        run: codesign --verify --deep --strict --verbose=2 "Memory Widget.app"
+        run: |
+          codesign --verify --deep --strict --verbose=2 "Memory Widget.app"
+          ./scripts/test_updater.sh
 
       - name: Test modern and legacy MCP
         run: ./test_mcp.sh

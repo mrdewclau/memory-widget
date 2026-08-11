@@ -8,21 +8,60 @@ on:
 permissions:
   contents: write
 
+defaults:
+  run:
+    shell: zsh {0}
+
 jobs:
   release:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
+
+      - name: Download pinned Sparkle release tools
+        env:
+          SPARKLE_VERSION: '2.9.5'
+          SPARKLE_SHA256: '015336b601493e05c237964954bff6191370003d94edefe663724c88840d73cc'
+        run: |
+          mkdir -p .build/sparkle-tools
+          curl --fail --location --silent --show-error \
+            "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
+            --output .build/Sparkle.tar.xz
+          print -r -- "${SPARKLE_SHA256}  .build/Sparkle.tar.xz" | shasum -a 256 -c -
+          tar -xJf .build/Sparkle.tar.xz -C .build/sparkle-tools
+
       - name: Test
         env:
           MEMORY_WIDGET_SIGNING_IDENTITY: '-'
         run: |
           ./build_app.sh
           ./test_mcp.sh
+
+      - name: Verify tag matches app version
+        run: |
+          app_version="$(plutil -extract CFBundleShortVersionString raw 'Memory Widget.app/Contents/Info.plist')"
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [[ "$tag_version" != "$app_version" ]]; then
+            print -u2 "Tag $GITHUB_REF_NAME does not match app version $app_version"
+            exit 1
+          fi
+
       - name: Package
         env:
           MEMORY_WIDGET_SIGNING_IDENTITY: '-'
         run: ./scripts/package_release.sh
+
+      - name: Create and verify signed update feed
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          : "${SPARKLE_PRIVATE_KEY:?SPARKLE_PRIVATE_KEY repository secret is required}"
+          ./scripts/make_appcast.sh \
+            "dist/Memory-Widget-${GITHUB_REF_NAME}-macos-arm64.zip" \
+            ".build/sparkle-tools/bin/sign_update" \
+            "dist/appcast.xml"
+          ./scripts/test_updater.sh ".build/sparkle-tools/bin/sign_update" "dist/appcast.xml"
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
