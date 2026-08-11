@@ -2,6 +2,11 @@
 
 All notable changes are documented here.
 
+## 2.1.1 - 2026-08-11
+
+- Made release checksums portable so downloaded archives verify from any directory.
+- Updated the official GitHub Actions dependencies used by CI, CodeQL, and release packaging.
+
 ## 2.1.0 - 2026-08-11
 
 - Added complete physical-RAM composition and available-memory headroom.

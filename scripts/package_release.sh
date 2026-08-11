@@ -14,7 +14,10 @@ ARCHIVE="$DIST_DIR/Memory-Widget-v${VERSION}-macos-arm64.zip"
 rm -rf "$DIST_DIR"
 mkdir -p "$DIST_DIR"
 ditto -c -k --norsrc --keepParent "Memory Widget.app" "$ARCHIVE"
-shasum -a 256 "$ARCHIVE" > "$ARCHIVE.sha256"
+(
+  cd "$DIST_DIR"
+  shasum -a 256 "$(basename "$ARCHIVE")" > "$(basename "$ARCHIVE").sha256"
+)
 
 print "Created: $ARCHIVE"
 print "Checksum: $ARCHIVE.sha256"
