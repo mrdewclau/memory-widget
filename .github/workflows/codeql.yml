@@ -14,7 +14,7 @@ permissions:
 jobs:
   analyze:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v4
@@ -22,8 +22,5 @@ jobs:
           languages: swift
           build-mode: manual
       - name: Build
-        env:
-          MEMORY_WIDGET_SIGNING_IDENTITY: '-'
-          MEMORY_WIDGET_SWIFT_OPTIMIZATION: '-Onone'
-        run: ./build_app.sh
+        run: ./scripts/codeql_build.sh
       - uses: github/codeql-action/analyze@v4
