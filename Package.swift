@@ -13,14 +13,14 @@ let package = Package(
         .executable(name: "ContextSoundHelper", targets: ["ContextSoundHelper"]),
         .executable(name: "MemoryWidgetMCP", targets: ["MemoryWidgetMCP"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.9.5")
+    ],
     targets: [
         .executableTarget(
             name: "MemoryWidget",
-            path: ".",
-            sources: [
-                "MemoryWidget.swift",
-                "ContextObservatory.swift",
-                "MCPStateBridge.swift"
+            dependencies: [
+                .product(name: "Sparkle", package: "Sparkle")
             ],
             linkerSettings: [
                 .linkedFramework("AppKit"),
@@ -30,13 +30,15 @@ let package = Package(
                 .linkedFramework("CoreImage"),
                 .linkedFramework("ImageIO"),
                 .linkedFramework("ScreenCaptureKit"),
-                .linkedFramework("SwiftUI")
+                .linkedFramework("SwiftUI"),
+                .unsafeFlags([
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", "@executable_path/../Frameworks"
+                ])
             ]
         ),
         .executableTarget(
             name: "ContextVisionHelper",
-            path: ".",
-            sources: ["ContextVisionHelper.swift"],
             linkerSettings: [
                 .linkedFramework("CoreGraphics"),
                 .linkedFramework("ImageIO"),
@@ -45,16 +47,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "ContextSoundHelper",
-            path: ".",
-            sources: ["ContextSoundHelper.swift"],
             linkerSettings: [
                 .linkedFramework("SoundAnalysis")
             ]
         ),
-        .executableTarget(
-            name: "MemoryWidgetMCP",
-            path: ".",
-            sources: ["MemoryWidgetMCP.swift"]
-        )
+        .executableTarget(name: "MemoryWidgetMCP")
     ]
 )

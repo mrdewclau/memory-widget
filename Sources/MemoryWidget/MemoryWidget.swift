@@ -1,5 +1,6 @@
 import AppKit
 import Darwin
+import Sparkle
 import SwiftUI
 
 // MARK: - Memory model
@@ -819,6 +820,7 @@ struct MemoryWidgetView: View {
     @ObservedObject var presentation: WidgetPresentation
     let onToggleCollapsed: () -> Void
     let onEnterMenuBarMode: () -> Void
+    let onCheckForUpdates: () -> Void
     let onContentSizeChange: (CGSize) -> Void
     @State private var expandedFootprintID: String?
 
@@ -828,6 +830,7 @@ struct MemoryWidgetView: View {
         presentation: WidgetPresentation,
         onToggleCollapsed: @escaping () -> Void,
         onEnterMenuBarMode: @escaping () -> Void,
+        onCheckForUpdates: @escaping () -> Void,
         onContentSizeChange: @escaping (CGSize) -> Void
     ) {
         self.monitor = monitor
@@ -835,6 +838,7 @@ struct MemoryWidgetView: View {
         self.presentation = presentation
         self.onToggleCollapsed = onToggleCollapsed
         self.onEnterMenuBarMode = onEnterMenuBarMode
+        self.onCheckForUpdates = onCheckForUpdates
         self.onContentSizeChange = onContentSizeChange
         _expandedFootprintID = State(initialValue: nil)
     }
@@ -980,6 +984,10 @@ struct MemoryWidgetView: View {
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .tracking(1.1)
                 .foregroundStyle(Palette.active)
+
+            HeaderIconButton(symbol: "arrow.triangle.2.circlepath", label: "Check for updates") {
+                onCheckForUpdates()
+            }
 
             HeaderIconButton(
                 symbol: presentation.isCollapsed ? "rectangle.expand.vertical" : "rectangle.compress.vertical",
@@ -2000,6 +2008,7 @@ private struct MenuBarMemoryView: View {
     @ObservedObject var menuPresentation: MenuBarPresentation
     let onShowFull: () -> Void
     let onShowCompact: () -> Void
+    let onCheckForUpdates: () -> Void
     let onQuit: () -> Void
     let onContentSizeChange: (CGSize) -> Void
 
@@ -2048,6 +2057,17 @@ private struct MenuBarMemoryView: View {
                 MenuModeButton(title: "FULL", symbol: "rectangle.expand.vertical", isSelected: !presentation.isCollapsed, action: onShowFull)
                 MenuModeButton(title: "COMPACT", symbol: "rectangle.compress.vertical", isSelected: presentation.isCollapsed, action: onShowCompact)
                 Spacer(minLength: 4)
+                Button(action: onCheckForUpdates) {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Palette.secondary)
+                        .frame(width: 30, height: 30)
+                        .background(Palette.surface)
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Check for updates")
+                .accessibilityLabel("Check for updates")
                 Button(action: onQuit) {
                     Image(systemName: "power")
                         .font(.system(size: 11, weight: .semibold))
@@ -2393,8 +2413,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPo
     private var hasPlacedWindow = false
     private var isFittingWindow = false
     private var lastPopoverSize = CGSize.zero
+    private var updaterController: SPUStandardUpdaterController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
         let menuBarOnly = UserDefaults.standard.bool(forKey: "menuBarOnly")
         NSApp.setActivationPolicy(menuBarOnly ? .accessory : .regular)
         setupMenuBar()
@@ -2461,6 +2487,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPo
             presentation: presentation,
             onToggleCollapsed: { [weak self] in self?.toggleDesktopCollapsed() },
             onEnterMenuBarMode: { [weak self] in self?.enterMenuBarMode() },
+            onCheckForUpdates: { [weak self] in self?.checkForUpdates() },
             onContentSizeChange: { [weak self] size in
                 guard self?.hostingGeneration == generation else { return }
                 self?.fitWindow(to: size)
@@ -2506,6 +2533,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPo
             menuPresentation: menuPresentation,
             onShowFull: { [weak self] in self?.showDesktopWidget(collapsed: false) },
             onShowCompact: { [weak self] in self?.showDesktopWidget(collapsed: true) },
+            onCheckForUpdates: { [weak self] in self?.checkForUpdates() },
             onQuit: { NSApp.terminate(nil) },
             onContentSizeChange: { [weak self] size in self?.fitPopover(to: size) }
         )
@@ -2555,6 +2583,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPo
         let snapshot = monitor.snapshot
         statusItem.button?.title = "\(ByteFormatter.gigabytes(snapshot.usedBytes))G"
         statusItem.button?.toolTip = "Memory: \(ByteFormatter.gigabytes(snapshot.usedBytes)) GB used, \(ByteFormatter.gigabytes(snapshot.availableBytes)) GB available · \(observatory.snapshot.state.title.capitalized)"
+    }
+
+    private func checkForUpdates() {
+        popover.performClose(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        updaterController.checkForUpdates(nil)
     }
 
     private func enterMenuBarMode() {

@@ -2,6 +2,14 @@
 
 All notable changes are documented here.
 
+## 2.2.0 - 2026-08-11
+
+- Added secure in-app updates powered by Sparkle 2.9.5.
+- Added automatic daily update discovery and manual checks in desktop and menu-bar modes.
+- Added Ed25519 verification for both the signed update feed and archive before extraction.
+- Added lossless app-bundle replacement that preserves RAM history, Context Observatory evidence, MCP configuration, preferences, and window placement.
+- Added GitHub release automation for signed appcasts and portable archive checksums.
+
 ## 2.1.1 - 2026-08-11
 
 - Made release checksums portable so downloaded archives verify from any directory.

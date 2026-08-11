@@ -1,6 +1,8 @@
 # Privacy
 
-Memory Widget is local-first. The application contains no analytics SDK, advertising SDK, cloud client, remote model, account system, or automatic updater. It does not transmit RAM telemetry, process names, screen content, camera frames, audio, or derived context.
+Memory Widget is local-first. The application contains no analytics SDK, advertising SDK, remote model, or account system. It does not transmit RAM telemetry, process names, screen content, camera frames, audio, or derived context.
+
+The app uses Sparkle to fetch a signed update feed and, only after user confirmation, an update archive from this repository's GitHub Releases over HTTPS. These requests contain normal network metadata such as IP address and HTTP headers. Sparkle system profiling is explicitly disabled, so Memory Widget does not add hardware, operating-system, RAM, process, capture, history, or user identifiers to update requests.
 
 ## Data processed
 
@@ -24,6 +26,10 @@ Memory Widget never calls the macOS Screen Recording request API and never opens
 The MCP server uses stdio only. It exposes the live state, footprint provenance, saved RAM history, and Context Observatory to a local agent that the user has explicitly configured. It does not listen on TCP/UDP and does not provide remote authentication because it has no remote transport.
 
 Any local agent with access to the MCP server can read these local summaries. Only register the server with agents you trust.
+
+## Updates
+
+Update discovery runs at most once per day by default and can also be triggered from the circular-arrow control. The app does not silently install or relaunch: Sparkle presents the release and asks before completing the update. The signed feed and archive are verified before extraction. Update installation replaces the app bundle and does not read, upload, migrate, or remove the files in Application Support.
 
 ## Removing data
 

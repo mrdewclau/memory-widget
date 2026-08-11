@@ -65,7 +65,13 @@ Context Observatory correlates RAM with local activity. It uses bounded collecti
 | Screen | Disabled until an existing Screen Recording grant is silently verified. The app never opens System Settings. |
 | CPU + audio-producing apps | Used to distinguish direct use from autonomous background work. |
 
-Only one analysis helper runs at a time. Rich capture pauses under macOS memory pressure. Raw evidence is removed after seven days; derived history is stored as bounded local files. No network client or analytics SDK is included.
+Only one analysis helper runs at a time. Rich capture pauses under macOS memory pressure. Raw evidence is removed after seven days; derived history is stored as bounded local files. No analytics SDK is included. The only built-in network activity is Sparkle checking GitHub Releases for signed app updates.
+
+## Updates
+
+Memory Widget 2.2.0 and newer check the stable GitHub release feed once per day. Use the circular-arrow control in either the desktop header or menu-bar popover to check immediately. Discovery is automatic; downloading, installation, and relaunch remain user-confirmed.
+
+Both the update feed and archive are signed with a dedicated Ed25519 key, and the archive is verified before extraction. Updating replaces only `Memory Widget.app`; history, evidence, MCP state, preferences, permission decisions, and window placement remain outside the bundle and are preserved. Existing 2.1.1 installations need one manual download of 2.2.0 because that older build does not contain an updater. See [Updater design and release runbook](docs/UPDATER.md).
 
 ## MCP access
 

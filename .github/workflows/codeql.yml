@@ -14,9 +14,11 @@ permissions:
 jobs:
   analyze:
     runs-on: macos-15
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
+      - name: Resolve dependencies before tracing
+        run: swift package resolve
       - uses: github/codeql-action/init@v4
         with:
           languages: swift
