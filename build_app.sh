@@ -14,6 +14,7 @@ MACOS="$CONTENTS/MacOS"
 RESOURCES="$CONTENTS/Resources"
 ICON_BUILD="$BASE_DIR/.build/MemoryWidget.iconset"
 ICON_SOURCE_PNG="$BASE_DIR/.build/MemoryWidgetIcon.svg.png"
+SWIFT_OPTIMIZATION="${MEMORY_WIDGET_SWIFT_OPTIMIZATION:--O}"
 
 rm -rf "$APP_DIR"
 rm -rf "$BASE_DIR/.build"
@@ -33,7 +34,7 @@ swiftc "$BASE_DIR/MemoryWidget.swift" \
   -framework SwiftUI \
   -parse-as-library \
   -target arm64-apple-macosx14.0 \
-  -O
+  "$SWIFT_OPTIMIZATION"
 
 swiftc "$BASE_DIR/ContextVisionHelper.swift" \
   -o "$MACOS/ContextVisionHelper" \
@@ -42,20 +43,20 @@ swiftc "$BASE_DIR/ContextVisionHelper.swift" \
   -framework Vision \
   -parse-as-library \
   -target arm64-apple-macosx14.0 \
-  -O
+  "$SWIFT_OPTIMIZATION"
 
 swiftc "$BASE_DIR/ContextSoundHelper.swift" \
   -o "$MACOS/ContextSoundHelper" \
   -framework SoundAnalysis \
   -parse-as-library \
   -target arm64-apple-macosx14.0 \
-  -O
+  "$SWIFT_OPTIMIZATION"
 
 swiftc "$BASE_DIR/MemoryWidgetMCP.swift" \
   -o "$MACOS/MemoryWidgetMCP" \
   -parse-as-library \
   -target arm64-apple-macosx14.0 \
-  -O
+  "$SWIFT_OPTIMIZATION"
 
 qlmanage -t -s 1024 -o "$BASE_DIR/.build" "$BASE_DIR/MemoryWidgetIcon.svg" >/dev/null 2>&1
 for spec in \
